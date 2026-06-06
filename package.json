@@ -1,17 +1,17 @@
 {
-  "name": "smart-steel-factory-3d",
-  "version": "1.0.0",
-  "description": "3D智慧钢铁厂生产调度与环保联动可视化平台",
-  "main": "index.html",
+  "name": "smart-steel-factory-pro",
+  "version": "2.0.0",
+  "description": "Professional 3D Smart Steel Factory Production Scheduling & Environmental Monitoring Platform",
+  "main": "server/index.js",
   "scripts": {
-    "dev": "npx serve -p 3000",
-    "start": "npx serve -p 3000"
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "dev": "node server/index.js"
   },
   "dependencies": {
-    "three": "^0.160.0",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "serve": "^14.2.1"
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "xlsx": "^0.18.5",
+    "cors": "^2.8.5"
   }
 }

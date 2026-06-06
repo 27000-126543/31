@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3D智慧钢铁厂生产调度与环保联动可视化平台 Professional</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="css/industrial.css" />
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-badge">🏭</div>
+            <h1>智慧钢铁厂可视化平台</h1>
+            <p class="login-sub">Smart Steel Factory Production &amp; Environmental Platform v2.0</p>
+        </div>
+        <div class="login-body">
+            <label class="form-label">登录角色</label>
+            <select id="role-select" class="form-select">
+                <option value="operator">操作员</option>
+                <option value="director">车间主任</option>
+                <option value="manager">厂长</option>
+            </select>
+
+            <label class="form-label">人脸识别</label>
+            <div class="face-scan-wrapper">
+                <video id="face-video" autoplay playsinline muted></video>
+                <canvas id="face-canvas" style="display:none"></canvas>
+                <div id="face-overlay" class="face-overlay">
+                    <div class="face-frame"></div>
+                    <div id="face-status" class="face-status">请将面部置于框内，点击开始识别</div>
+                </div>
+            </div>
+
+            <div class="login-actions">
+                <button id="start-face-btn" class="btn btn-primary">
+                    <span class="btn-icon">📷</span>
+                    <span>开启摄像头</span>
+                </button>
+                <button id="verify-face-btn" class="btn btn-success" disabled>
+                    <span class="btn-icon">🔐</span>
+                    <span>人脸识别登录</span>
+                </button>
+            </div>
+
+            <div id="login-error" class="login-error"></div>
+        </div>
+        <div class="login-footer">
+            <span>© 2025 Smart Steel Factory Platform Professional Edition</span>
+        </div>
+    </div>
+</div>
+
+<div id="app" style="display:none">
+    <div id="three-container"></div>
+
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="app-title">
+                <span class="title-icon">🏭</span>
+                <span>3D智慧钢铁厂可视化平台</span>
+            </div>
+            <div class="user-info">
+                <span id="current-user"></span>
+                <span id="current-role" class="role-tag"></span>
+                <button id="logout-btn" class="btn btn-ghost btn-small">🚪 退出</button>
+            </div>
+        </div>
+        <div class="top-bar-center">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-production">0</div>
+                <div class="stat-label">产量 (吨)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pass-rate">0%</div>
+                <div class="stat-label">合格率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-alarms">0</div>
+                <div class="stat-label">报警数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-energy">0</div>
+                <div class="stat-label">综合能耗 kgce/t</div>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <div id="ws-status" class="ws-status ws-connected">● 已连接</div>
+            <div id="clock"></div>
+            <button id="export-btn" class="btn btn-accent btn-small">
+                📥 导出日报
+            </button>
+        </div>
+    </header>
+
+    <aside class="side-panel side-left">
+        <div class="panel-section">
+            <h3 class="panel-title">📍 区域导航</h3>
+            <div class="nav-list" id="nav-list">
+                <button class="nav-btn active" data-area="overview">🏠 总览</button>
+                <button class="nav-btn" data-area="rawYard">📦 原料场</button>
+                <button class="nav-btn" data-area="blastFurnace">🔥 高炉</button>
+                <button class="nav-btn" data-area="converter">⚙️ 转炉</button>
+                <button class="nav-btn" data-area="caster">🔄 连铸机</button>
+                <button class="nav-btn" data-area="rollingMill">🏭 轧机</button>
+                <button class="nav-btn" data-area="warehouse">📦 成品库</button>
+                <button class="nav-btn" data-area="controlRoom">🖥️ 中央控制室</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3 class="panel-title">📋 实时报警</h3>
+            <div class="alarm-list" id="alarm-list">
+                <div class="empty-hint">暂无报警</div>
+            </div>
+        </div>
+    </aside>
+
+    <aside class="side-panel side-right">
+        <div class="panel-section">
+            <h3 class="panel-title">📊 设备详情</h3>
+            <div id="equipment-detail" class="equipment-detail">
+                <div class="empty-hint">点击场景中的设备查看详细信息</div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3 class="panel-title">🌿 环保监测</h3>
+            <div id="environmental-stats" class="env-stats"></div>
+        </div>
+
+        <div class="panel-section">
+            <h3 class="panel-title">👷 人员定位</h3>
+            <div id="personnel-list" class="personnel-list"></div>
+        </div>
+
+        <div class="panel-section">
+            <h3 class="panel-title">🕐 生产调度时间轴</h3>
+            <div id="timeline" class="timeline"></div>
+        </div>
+    </aside>
+
+    <div id="chart-modal" class="modal" style="display:none">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="chart-title">高炉24小时炉况曲线</h3>
+                <button class="modal-close" data-close="chart-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <canvas id="chart-canvas" width="800" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal" style="display:none">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-alert">
+            <div class="alert-icon" id="alert-icon">⚠️</div>
+            <div class="modal-header">
+                <h3 id="alert-title">报警</h3>
+            </div>
+            <div class="modal-body">
+                <p id="alert-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" data-close="alert-modal">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="suggestion-modal" class="modal" style="display:none">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="suggestion-title">调整建议</h3>
+                <button class="modal-close" data-close="suggestion-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="suggestion-list" class="suggestion-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="execute-suggestion">执行建议</button>
+                <button class="btn btn-ghost" data-close="suggestion-modal">稍后处理</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/pro/ws.js"></script>
+<script src="js/pro/face.js"></script>
+<script src="js/pro/scene.js"></script>
+<script src="js/pro/ui.js"></script>
+<script src="js/pro/main.js"></script>
+</body>
+</html>
