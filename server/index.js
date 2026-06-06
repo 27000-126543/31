@@ -7,7 +7,8 @@ const fs = require('fs');
 
 const IndustrialDataSimulator = require('./data/simulator');
 const ProductionScheduler = require('./data/scheduling');
-const { generateDailyReport } = require('./routes/report');
+const { generateDailyReport, getExportHistory } = require('./routes/report');
+const faceRoutes = require('./routes/face');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,7 +17,7 @@ const wss = new WebSocket.Server({ server, path: '/ws' });
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const SIMULATOR_PUBLIC_DIRS = ['css', 'js', 'models', 'assets'];
+const SIMULATOR_PUBLIC_DIRS = ['css', 'js', 'models', 'assets', 'public'];
 const rootDir = path.resolve(__dirname, '..');
 
 for (const dir of SIMULATOR_PUBLIC_DIRS) {
@@ -25,7 +26,14 @@ for (const dir of SIMULATOR_PUBLIC_DIRS) {
         app.use('/' + dir, express.static(fullPath));
     }
 }
+const publicDir = path.join(rootDir, 'public');
+if (fs.existsSync(publicDir)) {
+    app.use(express.static(publicDir));
+}
 app.use('/', express.static(rootDir));
+
+const state = {};
+faceRoutes(app, state, wss);
 
 const simulator = new IndustrialDataSimulator();
 const scheduler = new ProductionScheduler(simulator);
@@ -107,6 +115,14 @@ function handleMessage(ws, msg) {
             }));
             break;
         }
+        case 'face_verify': {
+            const result = faceRoutes.verifyFace(msg.faceVector, msg.role);
+            ws.send(JSON.stringify({
+                type: 'face_verify_result',
+                ...result
+            }));
+            break;
+        }
         default:
             console.log('[WS] Unknown message type:', msg.type);
     }
@@ -134,13 +150,19 @@ app.get('/api/alarms', (req, res) => {
 
 app.get('/api/report/daily', (req, res) => {
     const shift = req.query.shift || 'day';
-    const buf = generateDailyReport(simulator.state, shift);
-    const fileName = 'SteelFactory_DailyReport_' + shift + '_' +
-        new Date().toISOString().slice(0, 10) + '.xlsx';
+    const user = req.query.user || 'System';
+    const result = generateDailyReport(simulator.state, shift, user);
+    if (!result.success) {
+        return res.json({ success: false, errors: result.errors });
+    }
     res.setHeader('Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="' + fileName + '"');
-    res.send(buf);
+    res.setHeader('Content-Disposition', 'attachment; filename="' + result.fileName + '"');
+    res.send(result.buffer);
+});
+
+app.get('/api/report/history', (req, res) => {
+    res.json(getExportHistory());
 });
 
 app.get('/api/logs', (req, res) => {

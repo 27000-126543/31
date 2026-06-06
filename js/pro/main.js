@@ -40,6 +40,22 @@ const App = {
 
         UIManager.init(info.name, info.role);
 
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            const scoreSpan = document.createElement('span');
+            scoreSpan.id = 'face-score';
+            scoreSpan.style.color = '#00d4ff';
+            scoreSpan.style.marginLeft = '10px';
+            scoreSpan.style.fontSize = '12px';
+            scoreSpan.textContent = '匹配度 ' + ((info.similarity || 0) * 100).toFixed(1) + '%';
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                userInfo.insertBefore(scoreSpan, logoutBtn);
+            } else {
+                userInfo.appendChild(scoreSpan);
+            }
+        }
+
         FactoryScene.onClick = (userData) => UIManager.showEquipmentDetail(userData);
         FactoryScene.init('three-container');
 

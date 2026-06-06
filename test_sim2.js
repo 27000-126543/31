@@ -1,0 +1,28 @@
+const Sim = require('./server/data/simulator.js');
+const sim = new Sim();
+console.log('人数: ' + sim.state.personnel.length);
+for (let i = 0; i < 50; i++) sim.tick();
+const snap = sim.getSnapshot();
+console.log('=== 高炉 ===');
+snap.blastFurnaces.forEach(bf => console.log('  ' + bf.name + ' 温度=' + bf.hotMetalTemp.toFixed(2) + ' 风压=' + bf.windPressure.toFixed(1) + ' 硅=' + bf.silicon.toFixed(3)));
+console.log('=== 转炉 ===');
+snap.converters.forEach(c => console.log('  ' + c.name + ' 温度=' + c.temp.toFixed(1) + ' 气泡=' + c.bubbleCount + ' 氩=' + c.argonActive));
+console.log('=== 连铸机 ===');
+snap.casters.forEach(ct => console.log('  ' + ct.name + ' v=' + ct.castingSpeed.toFixed(2) + ' sigma=' + ct._sigma.toFixed(3) + ' 波动=' + ct.levelVariation.toFixed(2)));
+console.log('=== 轧机 ===');
+snap.rollingMills.forEach(rm => console.log('  ' + rm.name + ' 力=' + rm.rollingForce.toFixed(0) + ' 偏差=' + rm.thicknessDeviation.toFixed(4) + ' dh_prev=' + rm._dh_prev.toFixed(4)));
+console.log('=== 烟囱 ===');
+snap.stacks.forEach(st => console.log('  ' + st.name + ' SO2=' + st.so2.toFixed(1) + ' NOx=' + st.nox.toFixed(1) + ' 超限=' + st.overLimit + ' 减排=' + st._reducing + ' 脱硫率=' + st._eta_desulf.toFixed(3) + ' 脱硝率=' + st._eta_denit.toFixed(3)));
+console.log('=== 能耗 ===');
+console.log('  综合: ' + snap.energyConsumption.current.toFixed(1) + ' kgce/t');
+snap.energyConsumption.perFurnace.forEach(pf => console.log('  ' + pf.name + ': ' + pf.value.toFixed(1)));
+console.log('=== 人员 ===');
+snap.personnel.forEach(p => {
+  const v = Math.sqrt(p.vx*p.vx + p.vz*p.vz);
+  console.log('  ' + p.name + ' x=' + p.x.toFixed(2) + ' z=' + p.z.toFixed(2) + ' |v|=' + v.toFixed(3) + ' 危险=' + p.inDanger);
+});
+console.log('=== 产量 ===');
+console.log('  ' + snap.dailyStats.production + ' t, 合格率 ' + snap.dailyStats.passRate.toFixed(2) + '%');
+console.log('=== 报警 ===');
+console.log('  总数: ' + snap.alarms.length);
+console.log('\n50 ticks OK');

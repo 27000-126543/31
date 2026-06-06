@@ -94,5 +94,23 @@ const WSClient = {
     requestMatchOrder(orderId) { this.send('matchOrder', { orderId }); },
     requestTimeline() { this.send('getTimeline'); },
     logOperation(data) { this.send('logOperation', { data }); },
-    verifyFace(userId, faceData) { this.send('verifyFace', { userId, faceData }); }
+
+    verifyFace(faceVector, role) {
+        return new Promise((resolve, reject) => {
+            if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                reject(new Error('WebSocket not connected'));
+                return;
+            }
+            const handler = (data) => {
+                this.off('face_verify_result', handler);
+                resolve(data);
+            };
+            this.on('face_verify_result', handler);
+            this.send('face_verify', { faceVector, role });
+            setTimeout(() => {
+                this.off('face_verify_result', handler);
+                reject(new Error('Face verify timeout'));
+            }, 10000);
+        });
+    }
 };

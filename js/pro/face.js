@@ -43,9 +43,10 @@ const FaceRecognition = {
         }
     },
 
-    _captureFaceData() {
+    _captureFaceVector() {
+        const VECTOR_SIZE = 128;
         if (!this.canvasEl || !this.videoEl || !this.videoEl.videoWidth) {
-            return this._generateMockFaceData();
+            return this._generateMockFaceVector();
         }
         const ctx = this.canvasEl.getContext('2d');
         this.canvasEl.width = this.videoEl.videoWidth;
@@ -53,34 +54,48 @@ const FaceRecognition = {
         ctx.drawImage(this.videoEl, 0, 0);
         try {
             const imgData = ctx.getImageData(0, 0, this.canvasEl.width, this.canvasEl.height).data;
-            let rSum = 0, gSum = 0, bSum = 0, pCount = 0;
-            for (let i = 0; i < imgData.length; i += 16) {
-                rSum += imgData[i];
-                gSum += imgData[i + 1];
-                bSum += imgData[i + 2];
-                pCount++;
+            const w = this.canvasEl.width;
+            const h = this.canvasEl.height;
+            const vector = new Array(VECTOR_SIZE).fill(0);
+            const cellW = Math.floor(w / 8);
+            const cellH = Math.floor(h / 16);
+            let idx = 0;
+            for (let cy = 0; cy < 16 && idx < VECTOR_SIZE; cy++) {
+                for (let cx = 0; cx < 8 && idx < VECTOR_SIZE; cx++) {
+                    let rSum = 0, gSum = 0, bSum = 0, count = 0;
+                    const startX = cx * cellW;
+                    const startY = cy * cellH;
+                    for (let py = startY; py < startY + cellH && py < h; py += 2) {
+                        for (let px = startX; px < startX + cellW && px < w; px += 2) {
+                            const offset = (py * w + px) * 4;
+                            rSum += imgData[offset];
+                            gSum += imgData[offset + 1];
+                            bSum += imgData[offset + 2];
+                            count++;
+                        }
+                    }
+                    if (count > 0) {
+                        const lum = (0.299 * rSum + 0.587 * gSum + 0.114 * bSum) / count / 255;
+                        vector[idx] = (lum - 0.5) * 2;
+                    }
+                    idx++;
+                }
             }
-            return {
-                r: Math.floor(rSum / pCount),
-                g: Math.floor(gSum / pCount),
-                b: Math.floor(bSum / pCount),
-                w: this.canvasEl.width,
-                h: this.canvasEl.height,
-                hash: (rSum ^ gSum ^ bSum).toString(36)
-            };
+            const norm = Math.sqrt(vector.reduce((s, v) => s + v * v, 0)) || 1;
+            return vector.map(v => v / norm);
         } catch (e) {
-            return this._generateMockFaceData();
+            return this._generateMockFaceVector();
         }
     },
 
-    _generateMockFaceData() {
-        const r = Math.floor(Math.random() * 255);
-        const g = Math.floor(Math.random() * 255);
-        const b = Math.floor(Math.random() * 255);
-        return {
-            r, g, b, w: 320, h: 240,
-            hash: (r ^ g ^ b ^ Date.now()).toString(36)
-        };
+    _generateMockFaceVector() {
+        const VECTOR_SIZE = 128;
+        const vector = [];
+        for (let i = 0; i < VECTOR_SIZE; i++) {
+            vector.push((Math.random() - 0.5) * 2);
+        }
+        const norm = Math.sqrt(vector.reduce((s, v) => s + v * v, 0)) || 1;
+        return vector.map(v => v / norm);
     },
 
     async _verify() {
@@ -96,26 +111,44 @@ const FaceRecognition = {
             this._setStatus(steps[i]);
         }
 
-        const faceData = this._captureFaceData();
+        const faceVector = this._captureFaceVector();
 
-        const userNames = {
-            operator: '操作员张三',
-            director: '李主任',
-            manager: '王厂长'
-        };
-        const name = userNames[role];
+        let result;
+        try {
+            if (WSClient && WSClient.socket && WSClient.socket.readyState === WebSocket.OPEN) {
+                result = await WSClient.verifyFace(faceVector, role);
+            } else {
+                const res = await fetch('/api/face/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ faceVector, role })
+                });
+                result = await res.json();
+            }
+        } catch (e) {
+            console.error('[Face] Verify error:', e);
+            result = { success: false, error: e.message };
+        }
 
-        await this._sleep(500);
+        await this._sleep(300);
         this._stopCamera();
+
+        if (result && result.success) {
+            this._setStatus('验证成功！ 匹配度 ' + (result.similarity * 100).toFixed(1) + '%  置信度 ' + (result.confidence * 100).toFixed(1) + '%');
+        } else {
+            this._setStatus('人脸识别失败，请重试');
+            this.verifyBtn.disabled = false;
+        }
 
         if (this.onVerified) {
             this.onVerified({
-                success: true,
-                role: role,
-                name: name,
-                userId: this.userId,
-                similarity: 0.85 + Math.random() * 0.1,
-                faceData: faceData
+                success: result ? result.success : false,
+                role: result ? result.role : role,
+                name: result ? result.name : null,
+                userId: result ? result.userId : null,
+                similarity: result ? result.similarity : 0,
+                confidence: result ? result.confidence : 0,
+                faceVector: faceVector
             });
         }
     },

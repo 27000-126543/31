@@ -13,6 +13,11 @@ const FactoryScene = {
     effects: [],
     onClick: null,
     currentState: null,
+    loadingEl: null,
+    _modelsLoaded: false,
+    _equipmentBuilt: false,
+    _dangerZonesBuilt: false,
+    _modelProtos: null,
 
     init(containerId) {
         this.container = document.getElementById(containerId);
@@ -33,10 +38,11 @@ const FactoryScene = {
         this.renderer.setClearColor(0x0a0e17);
         this.container.appendChild(this.renderer.domElement);
 
+        this._showLoading();
+
         this._setupLights();
         this._buildGround();
         this._buildGrid();
-        this._buildAllEquipment();
 
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
@@ -51,6 +57,38 @@ const FactoryScene = {
         window.addEventListener('resize', () => this._onResize());
 
         this._animate();
+
+        this._loadAllModels();
+    },
+
+    _showLoading() {
+        this.loadingEl = document.createElement('div');
+        this.loadingEl.style.cssText = [
+            'position:absolute',
+            'top:50%',
+            'left:50%',
+            'transform:translate(-50%,-50%)',
+            'color:#00d4ff',
+            'font-family:"PingFang SC",sans-serif',
+            'font-size:20px',
+            'text-align:center',
+            'z-index:1000',
+            'background:rgba(10,14,23,0.9)',
+            'padding:30px 50px',
+            'border:2px solid #00d4ff',
+            'border-radius:12px',
+            'box-shadow:0 0 30px rgba(0,212,255,0.4)'
+        ].join(';');
+        this.loadingEl.innerHTML = '🏭<br/>3D模型加载中...<br/><span style="font-size:13px;color:#667">正在初始化工业场景</span>';
+        this.container.style.position = 'relative';
+        this.container.appendChild(this.loadingEl);
+    },
+
+    _hideLoading() {
+        if (this.loadingEl) {
+            this.loadingEl.remove();
+            this.loadingEl = null;
+        }
     },
 
     _setupLights() {
@@ -156,125 +194,481 @@ const FactoryScene = {
         return sprite;
     },
 
-    _buildBlastFurnace(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'blastFurnace', data };
-
-        const base = new THREE.Mesh(
-            new THREE.CylinderGeometry(6.5, 7.5, 3, 24),
-            new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.8, roughness: 0.3 })
-        );
-        base.position.y = 1.5;
-        base.castShadow = base.receiveShadow = true;
-        group.add(base);
-
-        const hearth = new THREE.Mesh(
-            new THREE.CylinderGeometry(5.8, 6.3, 8, 32),
-            new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.75, roughness: 0.35 })
-        );
-        hearth.position.y = 7;
-        hearth.castShadow = hearth.receiveShadow = true;
-        group.add(hearth);
-
-        const belly = new THREE.Mesh(
-            new THREE.CylinderGeometry(4.5, 5.8, 6, 32),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.4 })
-        );
-        belly.position.y = 14;
-        belly.castShadow = belly.receiveShadow = true;
-        group.add(belly);
-
-        const shaft = new THREE.Mesh(
-            new THREE.CylinderGeometry(3.5, 4.5, 16, 32),
-            new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.65, roughness: 0.45 })
-        );
-        shaft.position.y = 25;
-        shaft.castShadow = shaft.receiveShadow = true;
-        group.add(shaft);
-
-        const top = new THREE.Mesh(
-            new THREE.CylinderGeometry(4, 3.5, 3, 32),
-            new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.3 })
-        );
-        top.position.y = 34.5;
-        top.castShadow = top.receiveShadow = true;
-        group.add(top);
-
-        const hoops = [6, 10, 16, 22, 28];
-        hoops.forEach((hy, i) => {
-            const hoop = new THREE.Mesh(
-                new THREE.TorusGeometry(5.5 - i * 0.25, 0.25, 8, 48),
-                new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff3300, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.2 })
-            );
-            hoop.rotation.x = Math.PI / 2;
-            hoop.position.y = hy;
-            group.add(hoop);
-        });
-
-        for (let i = 0; i < 4; i++) {
-            const angle = (i / 4) * Math.PI * 2;
-            const col = new THREE.Mesh(
-                new THREE.BoxGeometry(1, 18, 1),
-                new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.3 })
-            );
-            col.position.set(Math.cos(angle) * 5.5, 14, Math.sin(angle) * 5.5);
-            col.castShadow = true;
-            group.add(col);
-        }
-
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const tuyere = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.35, 0.45, 1.2, 12),
-                new THREE.MeshStandardMaterial({ color: 0xff5500, emissive: 0xff3300, emissiveIntensity: 0.8 })
-            );
-            tuyere.rotation.z = Math.PI / 2;
-            tuyere.position.set(Math.cos(angle) * 6.5, 4.5, Math.sin(angle) * 6.5);
-            tuyere.rotation.y = -angle;
-            group.add(tuyere);
-        }
-
-        const stack = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.6, 0.9, 12, 12),
-            new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.7, roughness: 0.4 })
-        );
-        stack.position.y = 42;
-        stack.castShadow = true;
-        group.add(stack);
-
-        const platform = new THREE.Mesh(
-            new THREE.CylinderGeometry(7.5, 7.5, 0.3, 32),
-            new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6, roughness: 0.6 })
-        );
-        platform.position.y = 33;
-        group.add(platform);
-
-        const rail = new THREE.Mesh(
-            new THREE.TorusGeometry(7.5, 0.12, 6, 48),
-            new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xff9900, emissiveIntensity: 0.3 })
-        );
-        rail.rotation.x = Math.PI / 2;
-        rail.position.y = 33.7;
-        group.add(rail);
-
-        this._addSmokeEffect(group, 0, 48, 0);
-
-        const flameGroup = new THREE.Group();
-        flameGroup.position.y = 4;
-        flameGroup.visible = false;
-        group.add(flameGroup);
-        group.userData.flameGroup = flameGroup;
-        this._buildFlame(flameGroup, 2.5);
-
-        const label = this._makeLabel(data.name);
-        label.position.y = 52;
+    _addLabel(group, text, yOffset, color) {
+        const label = this._makeLabel(text, color);
+        label.position.y = yOffset;
         group.add(label);
+        group.userData.labelSprite = label;
+        return label;
+    },
 
-        group.userData.baseColor = 0x3a3a3a;
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
+    _addWarningGlow(group, geometry, position, color) {
+        const glow = new THREE.Mesh(
+            geometry,
+            new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.BackSide })
+        );
+        if (position) glow.position.copy(position);
+        glow.visible = false;
+        glow.userData.type = 'warningGlow';
+        group.add(glow);
+        this.effects.push(glow);
+        group.userData.warningGlow = glow;
+        return glow;
+    },
+
+    _loadModel(url) {
+        return new Promise((resolve, reject) => {
+            const loader = new THREE.ObjectLoader();
+            loader.load(
+                url,
+                (obj) => resolve(obj),
+                undefined,
+                (err) => reject(err)
+            );
+        });
+    },
+
+    _getBBoxHeight(obj) {
+        const bbox = new THREE.Box3().setFromObject(obj);
+        return bbox.max.y - bbox.min.y;
+    },
+
+    _centerModelY(obj) {
+        const bbox = new THREE.Box3().setFromObject(obj);
+        const offset = -bbox.min.y;
+        obj.position.y += offset;
+    },
+
+    _findHelmetMesh(obj) {
+        let helmet = null;
+        const targetColor = new THREE.Color(0xf59e0b);
+        obj.traverse((child) => {
+            if (child.isMesh && child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                for (const mat of mats) {
+                    if (mat.color !== undefined && mat.color !== null) {
+                        let mc;
+                        if (mat.color.isColor) mc = mat.color;
+                        else if (typeof mat.color === 'number') mc = new THREE.Color(mat.color);
+                        else if (typeof mat.color === 'string') mc = new THREE.Color(mat.color);
+                        else continue;
+                        try {
+                            const d = mc.distanceTo(targetColor);
+                            if (d < 0.6) {
+                                helmet = child;
+                                break;
+                            }
+                        } catch (e) {}
+                    }
+                }
+                if (helmet) return;
+            }
+        });
+        return helmet;
+    },
+
+    async _loadAllModels() {
+        try {
+            const modelUrls = {
+                blastFurnace: '/models/blast_furnace.json',
+                converter: '/models/converter.json',
+                rollingMill: '/models/rolling_mill.json',
+                caster: '/models/caster.json',
+                stack: '/models/stack.json',
+                reclaimer: '/models/reclaimer.json',
+                worker: '/models/worker.json'
+            };
+
+            const keys = ['blastFurnace', 'converter', 'rollingMill', 'caster', 'stack', 'reclaimer', 'worker'];
+            const protoMap = { blastFurnace: 'bfProto', converter: 'convProto', rollingMill: 'rmProto', caster: 'castProto', stack: 'stackProto', reclaimer: 'reclaimProto', worker: 'workerProto' };
+            const urls = keys.map(k => modelUrls[k]);
+
+            const results = await Promise.allSettled(urls.map(u => this._loadModel(u)));
+            this._modelProtos = {};
+            let successCount = 0;
+            results.forEach((r, i) => {
+                if (r.status === 'fulfilled') {
+                    this._modelProtos[protoMap[keys[i]]] = r.value;
+                    successCount++;
+                } else {
+                    console.warn('[Scene] 模型加载失败 ' + keys[i] + ':', r.reason);
+                }
+            });
+            console.log('[Scene] 模型加载完成: ' + successCount + '/' + keys.length);
+
+            if (successCount === 0) {
+                throw new Error('所有3D模型加载失败');
+            }
+            this._modelsLoaded = true;
+
+            if (this.currentState && !this._equipmentBuilt) {
+                this._buildAllFromProtos();
+            }
+
+            this._hideLoading();
+
+            if (this.currentState && this._equipmentBuilt) {
+                this._updateEquipment(this.currentState);
+            }
+        } catch (err) {
+            console.error('模型加载失败:', err);
+            if (this.loadingEl) {
+                this.loadingEl.innerHTML = '⚠️ 模型加载失败<br/><span style="font-size:13px;color:#f66">' + err.message + '</span>';
+            }
+        }
+    },
+
+    _buildAllFromProtos() {
+        if (!this._modelProtos || !this.currentState || this._equipmentBuilt) return;
+        const p = this._modelProtos;
+
+        this._buildBlastFurnaces(p.bfProto);
+        this._buildConverters(p.convProto);
+        this._buildRollingMills(p.rmProto);
+        this._buildCasters(p.castProto);
+        this._buildStacks(p.stackProto);
+        this._buildReclaimers(p.reclaimProto);
+        this._buildPersonnel(p.workerProto);
+
+        this._buildWarehouse();
+        this._buildControlRoom();
+
+        if (this.currentState.dangerZones) {
+            this.currentState.dangerZones.forEach(dz => this._buildDangerZone(dz));
+            this._dangerZonesBuilt = true;
+        }
+
+        this._equipmentBuilt = true;
+    },
+
+    _buildBlastFurnaces(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[-25, 0, -15], [0, 0, -15], [25, 0, -15]];
+        this.currentState.blastFurnaces.forEach((bf, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = positions[i];
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.material && o.material.emissive !== undefined) {
+                        o.userData.origEmissive = o.material.emissive ? o.material.emissive.getHex() : 0;
+                        o.userData.origEmissiveIntensity = o.material.emissiveIntensity || 0;
+                    }
+                }
+            });
+            group.userData.type = 'blastFurnace';
+            group.userData.data = bf;
+            group.userData.id = bf.id;
+            group.userData.name = bf.name;
+            group.userData.baseColor = 0x3a3a3a;
+
+            const h = this._getBBoxHeight(group);
+            this._addLabel(group, bf.name, h + 4);
+
+            const topCenter = new THREE.Vector3();
+            const bbox = new THREE.Box3().setFromObject(group);
+            topCenter.set((bbox.min.x + bbox.max.x) / 2, bbox.max.y, (bbox.min.z + bbox.max.z) / 2);
+            group.worldToLocal(topCenter);
+            this._addSmokeEffect(group, topCenter.x, topCenter.y + 2, topCenter.z);
+
+            const flameGroup = new THREE.Group();
+            const midY = (bbox.min.y + bbox.max.y) * 0.25;
+            flameGroup.position.y = midY;
+            flameGroup.visible = false;
+            group.add(flameGroup);
+            group.userData.flameGroup = flameGroup;
+            this._buildFlame(flameGroup, 2.5);
+
+            this.scene.add(group);
+            this.equipmentMap[bf.id] = group;
+        });
+    },
+
+    _buildConverters(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[30, 0, -5], [30, 0, 15]];
+        this.currentState.converters.forEach((c, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = positions[i];
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.material && o.material.emissive !== undefined) {
+                        o.userData.origEmissive = o.material.emissive ? o.material.emissive.getHex() : 0;
+                        o.userData.origEmissiveIntensity = o.material.emissiveIntensity || 0;
+                        o.userData.origColor = o.material.color ? o.material.color.getHex() : 0;
+                    }
+                }
+            });
+            group.userData.type = 'converter';
+            group.userData.data = c;
+            group.userData.id = c.id;
+            group.userData.name = c.name;
+            group.userData.baseColor = 0x553322;
+            group.userData.shell = group;
+
+            const h = this._getBBoxHeight(group);
+            this._addLabel(group, c.name, h + 3);
+
+            const bbox = new THREE.Box3().setFromObject(group);
+            const topCenter = new THREE.Vector3((bbox.min.x + bbox.max.x) / 2, bbox.max.y, (bbox.min.z + bbox.max.z) / 2);
+            group.worldToLocal(topCenter);
+            this._addFlameOnTop(group, topCenter.x, topCenter.y, topCenter.z, c.flameColor);
+
+            const bubbleGroup = new THREE.Group();
+            bubbleGroup.position.y = (bbox.min.y + bbox.max.y) * 0.3;
+            bubbleGroup.visible = false;
+            group.add(bubbleGroup);
+            group.userData.bubbleGroup = bubbleGroup;
+            this._buildBubbles(bubbleGroup, 3.5);
+
+            this.scene.add(group);
+            this.equipmentMap[c.id] = group;
+        });
+    },
+
+    _buildRollingMills(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[-25, 0, 20], [0, 0, 20]];
+        this.currentState.rollingMills.forEach((rm, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = positions[i];
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.geometry && (o.geometry.type === 'CylinderGeometry' || o.geometry.type === 'CylinderBufferGeometry')) {
+                        o.userData.type = 'workRoll';
+                        this.effects.push(o);
+                    }
+                }
+            });
+            group.userData.type = 'rollingMill';
+            group.userData.data = rm;
+            group.userData.id = rm.id;
+            group.userData.name = rm.name;
+
+            const h = this._getBBoxHeight(group);
+            const labelColor = rm.lineType === 'CSP' ? '#00d4ff' : '#ff9933';
+            this._addLabel(group, rm.name, h + 2, labelColor);
+
+            const bbox = new THREE.Box3().setFromObject(group);
+            const sz = new THREE.Vector3();
+            bbox.getSize(sz);
+            this._addWarningGlow(group,
+                new THREE.BoxGeometry(sz.x + 4, sz.y + 4, sz.z + 4),
+                new THREE.Vector3(0, sz.y / 2, 0),
+                0xff6600
+            );
+
+            this.scene.add(group);
+            this.equipmentMap[rm.id] = group;
+        });
+    },
+
+    _buildCasters(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[10, 0, 5], [10, 0, -8]];
+        this.currentState.casters.forEach((ct, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = positions[i];
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.geometry && (o.geometry.type === 'CylinderGeometry' || o.geometry.type === 'CylinderBufferGeometry')) {
+                        const gh = o.geometry.parameters ? o.geometry.parameters.height : 0;
+                        if (gh > 1.5) {
+                            o.userData.type = 'roller';
+                            this.effects.push(o);
+                        }
+                    }
+                }
+            });
+            group.userData.type = 'caster';
+            group.userData.data = ct;
+            group.userData.id = ct.id;
+            group.userData.name = ct.name;
+
+            const h = this._getBBoxHeight(group);
+            this._addLabel(group, ct.name, h + 2);
+
+            const bbox = new THREE.Box3().setFromObject(group);
+            const sz = new THREE.Vector3();
+            bbox.getSize(sz);
+            this._addWarningGlow(group,
+                new THREE.BoxGeometry(sz.x + 4, sz.y + 4, sz.z + 4),
+                new THREE.Vector3(0, sz.y / 2, 0),
+                0xff0000
+            );
+
+            this.scene.add(group);
+            this.equipmentMap[ct.id] = group;
+        });
+    },
+
+    _buildStacks(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[-10, 0, -30], [10, 0, -30]];
+        this.currentState.stacks.forEach((st, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = positions[i];
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.geometry && (o.geometry.type === 'TorusGeometry' || o.geometry.type === 'TorusBufferGeometry')) {
+                        group.userData.warningBand = o;
+                        if (o.material.emissive !== undefined) {
+                            o.material.emissiveIntensity = 0;
+                        }
+                    }
+                }
+            });
+            group.userData.type = 'stack';
+            group.userData.data = st;
+            group.userData.id = st.id;
+            group.userData.name = st.name;
+
+            const h = this._getBBoxHeight(group);
+            this._addLabel(group, st.name, h + 3);
+
+            const bbox = new THREE.Box3().setFromObject(group);
+            const sz = new THREE.Vector3();
+            bbox.getSize(sz);
+            this._addWarningGlow(group,
+                new THREE.CylinderGeometry(sz.x * 0.8, sz.x * 0.8, sz.y + 4, 24),
+                new THREE.Vector3(0, sz.y / 2, 0),
+                0xff0000
+            );
+
+            const topCenter = new THREE.Vector3(0, bbox.max.y, 0);
+            group.worldToLocal(topCenter);
+            this._addSmokeEffect(group, topCenter.x, topCenter.y + 1, topCenter.z);
+
+            this.scene.add(group);
+            this.equipmentMap[st.id] = group;
+        });
+    },
+
+    _buildReclaimers(proto) {
+        if (!this.currentState || !proto) return;
+        const positions = [[-35, 0, 0], [-35, 0, 12], [-35, 0, -12]];
+        const rawData = this.currentState.rawYard || [];
+        positions.forEach((pos, i) => {
+            const group = proto.clone(true);
+            const [px, py, pz] = pos;
+            group.position.set(px, py, pz);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                }
+            });
+            const pile = rawData[i];
+            const data = pile || { id: 'reclaim_' + i, name: '取料机' + (i + 1) };
+            group.userData.type = 'rawPile';
+            group.userData.data = data;
+            group.userData.id = data.id;
+            group.userData.name = data.name;
+
+            const h = this._getBBoxHeight(group);
+            const labelText = pile ? pile.name + ': ' + Math.floor(pile.stock) + 't' : '取料机' + (i + 1);
+            const labelColor = pile && pile.lowStock ? '#ff9900' : '#00d4ff';
+            this._addLabel(group, labelText, h + 2, labelColor);
+
+            const bbox = new THREE.Box3().setFromObject(group);
+            const sz = new THREE.Vector3();
+            bbox.getSize(sz);
+            this._addWarningGlow(group,
+                new THREE.BoxGeometry(sz.x + 4, sz.y + 4, sz.z + 4),
+                new THREE.Vector3(0, sz.y / 2, 0),
+                0xff8800
+            );
+
+            this.scene.add(group);
+            this.equipmentMap[data.id] = group;
+        });
+    },
+
+    _buildPersonnel(proto) {
+        if (!this.currentState || !proto) return;
+        this.personnelGroup = {};
+        this.currentState.personnel.forEach(p => {
+            const group = proto.clone(true);
+            group.position.set(p.x, 0, p.z);
+            this._centerModelY(group);
+            group.traverse(o => {
+                if (o.isMesh) {
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    if (o.material) {
+                        o.userData.origColor = o.material.color ? o.material.color.getHex() : 0;
+                    }
+                }
+            });
+            group.userData.type = 'personnel';
+            group.userData.data = p;
+            group.userData.id = p.id;
+            group.userData.name = p.name;
+
+            const helmet = this._findHelmetMesh(group);
+            if (helmet) {
+                group.userData.helmet = helmet;
+                group.userData.helmetMesh = helmet;
+                if (helmet.material.color !== undefined && helmet.material.color !== null && !helmet.material.color.isColor) {
+                    if (typeof helmet.material.color === 'number' || typeof helmet.material.color === 'string') {
+                        helmet.material.color = new THREE.Color(helmet.material.color);
+                    }
+                }
+                if (helmet.material.emissive !== undefined) {
+                    if (!helmet.material.emissive || !helmet.material.emissive.isColor) {
+                        if (typeof helmet.material.emissive === 'number' || typeof helmet.material.emissive === 'string') {
+                            helmet.material.emissive = new THREE.Color(helmet.material.emissive);
+                        } else {
+                            helmet.material.emissive = new THREE.Color(0);
+                        }
+                    }
+                    helmet.userData.origEmissive = helmet.material.emissive.getHex();
+                    if (helmet.material.emissiveIntensity === undefined) helmet.material.emissiveIntensity = 0;
+                }
+            }
+
+            const h = this._getBBoxHeight(group);
+            const labelColor = p.inDanger ? '#ff0000' : '#10b981';
+            const label = this._makeLabel(p.name + ' | ' + p.role, labelColor, 42);
+            label.position.y = h + 1;
+            group.add(label);
+            group.userData.label = label;
+            group.userData.labelSprite = label;
+
+            const warningGlow = new THREE.Mesh(
+                new THREE.SphereGeometry(1.5, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, side: THREE.BackSide })
+            );
+            warningGlow.position.y = h / 2;
+            warningGlow.visible = false;
+            warningGlow.userData.type = 'warningGlow';
+            group.add(warningGlow);
+            this.effects.push(warningGlow);
+            group.userData.warningGlow = warningGlow;
+
+            this.scene.add(group);
+            this.personnelGroup[p.id] = group;
+        });
     },
 
     _buildFlame(parent, size = 2) {
@@ -316,125 +710,6 @@ const FactoryScene = {
         core.userData.type = 'flameCore';
         parent.add(core);
         this.effects.push(core);
-    },
-
-    _buildConverter(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'converter', data };
-
-        const basePlatform = new THREE.Mesh(
-            new THREE.BoxGeometry(22, 1.5, 18),
-            new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 })
-        );
-        basePlatform.position.y = 0.75;
-        basePlatform.castShadow = basePlatform.receiveShadow = true;
-        group.add(basePlatform);
-
-        for (let i = 0; i < 6; i++) {
-            const col = new THREE.Mesh(
-                new THREE.BoxGeometry(1.2, 8, 1.2),
-                new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.3 })
-            );
-            col.position.set(-9 + i * 3.6, 5.5, -7);
-            col.castShadow = true;
-            group.add(col);
-            const col2 = col.clone();
-            col2.position.z = 7;
-            group.add(col2);
-        }
-
-        const upperDeck = new THREE.Mesh(
-            new THREE.BoxGeometry(22, 1, 18),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.4 })
-        );
-        upperDeck.position.y = 9.5;
-        upperDeck.castShadow = upperDeck.receiveShadow = true;
-        group.add(upperDeck);
-
-        const trunnionL = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.2, 1.2, 4, 16),
-            new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.9, roughness: 0.2 })
-        );
-        trunnionL.rotation.z = Math.PI / 2;
-        trunnionL.position.set(-10, 16, 0);
-        trunnionL.castShadow = true;
-        group.add(trunnionL);
-        const trunnionR = trunnionL.clone();
-        trunnionR.position.x = 10;
-        group.add(trunnionR);
-
-        const shell = new THREE.Group();
-        shell.position.y = 16;
-        group.add(shell);
-
-        const body = new THREE.Mesh(
-            new THREE.CylinderGeometry(5.5, 4, 10, 32),
-            new THREE.MeshStandardMaterial({ color: 0x553322, metalness: 0.6, roughness: 0.5 })
-        );
-        body.position.y = 0;
-        body.castShadow = body.receiveShadow = true;
-        shell.add(body);
-
-        const bottom = new THREE.Mesh(
-            new THREE.SphereGeometry(4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-            new THREE.MeshStandardMaterial({ color: 0x442211, metalness: 0.5, roughness: 0.6 })
-        );
-        bottom.rotation.x = Math.PI;
-        bottom.position.y = -5;
-        bottom.castShadow = true;
-        shell.add(bottom);
-
-        const mouth = new THREE.Mesh(
-            new THREE.CylinderGeometry(6.5, 5.5, 2.5, 32),
-            new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.4 })
-        );
-        mouth.position.y = 6.2;
-        mouth.castShadow = true;
-        shell.add(mouth);
-
-        const trunnionRing = new THREE.Mesh(
-            new THREE.TorusGeometry(6, 0.6, 12, 48),
-            new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.9, roughness: 0.2 })
-        );
-        trunnionRing.rotation.x = Math.PI / 2;
-        trunnionRing.position.y = 0;
-        shell.add(trunnionRing);
-
-        const hood = new THREE.Mesh(
-            new THREE.CylinderGeometry(3, 6, 5, 24),
-            new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.3 })
-        );
-        hood.position.y = 23;
-        hood.castShadow = true;
-        group.add(hood);
-
-        const duct = new THREE.Mesh(
-            new THREE.BoxGeometry(4, 4, 15),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.75, roughness: 0.35 })
-        );
-        duct.position.set(0, 26, 9);
-        duct.castShadow = true;
-        group.add(duct);
-
-        this._addFlameOnTop(shell, 0, 8, 0, data.flameColor);
-
-        const bubbleGroup = new THREE.Group();
-        bubbleGroup.position.y = -3;
-        bubbleGroup.visible = false;
-        shell.add(bubbleGroup);
-        group.userData.bubbleGroup = bubbleGroup;
-        this._buildBubbles(bubbleGroup, 3.5);
-
-        const label = this._makeLabel(data.name);
-        label.position.y = 32;
-        group.add(label);
-
-        group.userData.shell = shell;
-        group.userData.baseColor = 0x553322;
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
     },
 
     _addFlameOnTop(parent, x, y, z, colorHex) {
@@ -510,7 +785,6 @@ const FactoryScene = {
         smokeGroup.position.set(x, y, z);
         parent.add(smokeGroup);
 
-        const textures = [];
         for (let i = 0; i < 15; i++) {
             const s = 0.6 + Math.random() * 0.4;
             const mat = new THREE.MeshBasicMaterial({
@@ -527,446 +801,6 @@ const FactoryScene = {
             this.effects.push(sph);
         }
         parent.userData.smoke = smokeGroup;
-    },
-
-    _buildCaster(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'caster', data };
-
-        const base = new THREE.Mesh(
-            new THREE.BoxGeometry(18, 1, 10),
-            new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 })
-        );
-        base.position.y = 0.5;
-        base.castShadow = base.receiveShadow = true;
-        group.add(base);
-
-        const tundish = new THREE.Mesh(
-            new THREE.BoxGeometry(5, 2.5, 4),
-            new THREE.MeshStandardMaterial({ color: 0x553311, metalness: 0.4, roughness: 0.7 })
-        );
-        tundish.position.set(-5, 4, 0);
-        tundish.castShadow = tundish.receiveShadow = true;
-        group.add(tundish);
-
-        const tundishTop = new THREE.Mesh(
-            new THREE.BoxGeometry(5.5, 0.4, 4.5),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.4 })
-        );
-        tundishTop.position.set(-5, 5.45, 0);
-        group.add(tundishTop);
-
-        const mold = new THREE.Mesh(
-            new THREE.BoxGeometry(2.5, 3.5, 1.8),
-            new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.85, roughness: 0.25 })
-        );
-        mold.position.set(-1, 3, 0);
-        mold.castShadow = true;
-        group.add(mold);
-
-        for (let i = 0; i < 8; i++) {
-            const roller = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.35, 0.35, 2.5, 16),
-                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.3 })
-            );
-            roller.rotation.z = Math.PI / 2;
-            roller.position.set(2 + i * 1.8, 1.5, 0);
-            roller.castShadow = true;
-            roller.userData.type = 'roller';
-            group.add(roller);
-            this.effects.push(roller);
-        }
-
-        const sprayChamber = new THREE.Mesh(
-            new THREE.BoxGeometry(8, 3, 3),
-            new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.7, roughness: 0.4, transparent: true, opacity: 0.8 })
-        );
-        sprayChamber.position.set(6, 2, 0);
-        group.add(sprayChamber);
-
-        for (let i = 0; i < 5; i++) {
-            const support = new THREE.Mesh(
-                new THREE.BoxGeometry(0.6, 5, 0.6),
-                new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.3 })
-            );
-            support.position.set(-7 + i * 4, 2.5, -3.5);
-            support.castShadow = true;
-            group.add(support);
-            const s2 = support.clone();
-            s2.position.z = 3.5;
-            group.add(s2);
-        }
-
-        const slab = new THREE.Mesh(
-            new THREE.BoxGeometry(14, 0.5, 1.6),
-            new THREE.MeshStandardMaterial({ color: 0xcc3300, emissive: 0xff2200, emissiveIntensity: 0.3, metalness: 0.5, roughness: 0.5 })
-        );
-        slab.position.set(3, 1.9, 0);
-        group.add(slab);
-
-        const label = this._makeLabel(data.name);
-        label.position.y = 8.5;
-        group.add(label);
-
-        const warningGlow = new THREE.Mesh(
-            new THREE.BoxGeometry(19, 6, 11),
-            new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, side: THREE.BackSide })
-        );
-        warningGlow.position.y = 3;
-        warningGlow.visible = false;
-        warningGlow.userData.type = 'warningGlow';
-        group.add(warningGlow);
-        this.effects.push(warningGlow);
-        group.userData.warningGlow = warningGlow;
-
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
-    },
-
-    _buildRollingMill(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'rollingMill', data };
-
-        const base = new THREE.Mesh(
-            new THREE.BoxGeometry(30, 1.2, 14),
-            new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 })
-        );
-        base.position.y = 0.6;
-        base.castShadow = base.receiveShadow = true;
-        group.add(base);
-
-        for (let i = 0; i < 5; i++) {
-            const stand = new THREE.Group();
-            stand.position.set(-10 + i * 5, 0, 0);
-            group.add(stand);
-
-            const housingL = new THREE.Mesh(
-                new THREE.BoxGeometry(1.2, 8, 4),
-                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.85, roughness: 0.25 })
-            );
-            housingL.position.set(-1.8, 4, 0);
-            housingL.castShadow = housingL.receiveShadow = true;
-            stand.add(housingL);
-
-            const housingR = housingL.clone();
-            housingR.position.x = 1.8;
-            stand.add(housingR);
-
-            const topChock = new THREE.Mesh(
-                new THREE.BoxGeometry(4.8, 1.2, 4),
-                new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9, roughness: 0.2 })
-            );
-            topChock.position.y = 8.6;
-            topChock.castShadow = true;
-            stand.add(topChock);
-
-            const topRoll = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.7, 0.7, 4.2, 24),
-                new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.95, roughness: 0.15 })
-            );
-            topRoll.rotation.z = Math.PI / 2;
-            topRoll.position.y = 6.5;
-            topRoll.userData.type = 'workRoll';
-            stand.add(topRoll);
-            this.effects.push(topRoll);
-
-            const bottomRoll = topRoll.clone();
-            bottomRoll.position.y = 3.5;
-            stand.add(bottomRoll);
-            this.effects.push(bottomRoll);
-
-            const screwL = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.3, 0.3, 3, 12),
-                new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.95, roughness: 0.15 })
-            );
-            screwL.position.set(-1.8, 10.5, 0);
-            stand.add(screwL);
-            const screwR = screwL.clone();
-            screwR.position.x = 1.8;
-            stand.add(screwR);
-        }
-
-        const coilBox = new THREE.Mesh(
-            new THREE.BoxGeometry(6, 5, 8),
-            new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.7, roughness: 0.4 })
-        );
-        coilBox.position.set(-18, 2.5, 0);
-        coilBox.castShadow = coilBox.receiveShadow = true;
-        group.add(coilBox);
-
-        const runOutTable = new THREE.Mesh(
-            new THREE.BoxGeometry(14, 0.6, 8),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.4 })
-        );
-        runOutTable.position.set(17, 2.2, 0);
-        runOutTable.castShadow = runOutTable.receiveShadow = true;
-        group.add(runOutTable);
-
-        for (let i = 0; i < 8; i++) {
-            const tableRoll = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.25, 0.25, 8, 16),
-                new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.85, roughness: 0.25 })
-            );
-            tableRoll.rotation.z = Math.PI / 2;
-            tableRoll.position.set(11.5 + i * 1.5, 2.8, 0);
-            group.add(tableRoll);
-        }
-
-        for (let i = 0; i < 6; i++) {
-            const col = new THREE.Mesh(
-                new THREE.BoxGeometry(0.8, 8, 0.8),
-                new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.3 })
-            );
-            col.position.set(-14 + i * 6, 4, -5.5);
-            col.castShadow = true;
-            group.add(col);
-            const c2 = col.clone();
-            c2.position.z = 5.5;
-            group.add(c2);
-        }
-
-        const craneBeam = new THREE.Mesh(
-            new THREE.BoxGeometry(32, 0.8, 1.2),
-            new THREE.MeshStandardMaterial({ color: 0xff8800, metalness: 0.6, roughness: 0.5 })
-        );
-        craneBeam.position.y = 12;
-        group.add(craneBeam);
-
-        const label = this._makeLabel(data.name, data.lineType === 'CSP' ? '#00d4ff' : '#ff9933');
-        label.position.y = 14.5;
-        group.add(label);
-
-        const warningGlow = new THREE.Mesh(
-            new THREE.BoxGeometry(32, 14, 16),
-            new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0, side: THREE.BackSide })
-        );
-        warningGlow.position.y = 6;
-        warningGlow.visible = false;
-        warningGlow.userData.type = 'warningGlow';
-        group.add(warningGlow);
-        this.effects.push(warningGlow);
-        group.userData.warningGlow = warningGlow;
-
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
-    },
-
-    _buildRawPile(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'rawPile', data };
-
-        const w = 10, d = 8, h = 4 + (data.stock / 30000) * 3;
-        const pile = new THREE.Mesh(
-            new THREE.ConeGeometry(w * 0.7, h, 4),
-            new THREE.MeshStandardMaterial({
-                color: data.color, roughness: 0.95, metalness: 0.02
-            })
-        );
-        pile.rotation.y = Math.PI / 4;
-        pile.position.y = h / 2;
-        pile.castShadow = pile.receiveShadow = true;
-        group.add(pile);
-
-        const base = new THREE.Mesh(
-            new THREE.BoxGeometry(w + 1, 0.3, d + 1),
-            new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.8 })
-        );
-        base.position.y = 0.15;
-        base.receiveShadow = true;
-        group.add(base);
-
-        const reclaimer = new THREE.Group();
-        reclaimer.position.set(w * 0.6, 0, 0);
-        group.add(reclaimer);
-
-        const boom = new THREE.Mesh(
-            new THREE.BoxGeometry(8, 0.3, 0.5),
-            new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.6, roughness: 0.5 })
-        );
-        boom.position.set(-3, 3, 0);
-        boom.rotation.z = -0.3;
-        reclaimer.add(boom);
-
-        const bucket = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.6, 0.8, 0.5, 12),
-            new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.3 })
-        );
-        bucket.rotation.x = Math.PI / 2;
-        bucket.position.set(-7, 1.2, 0);
-        reclaimer.add(bucket);
-
-        const mast = new THREE.Mesh(
-            new THREE.BoxGeometry(0.6, 5, 0.6),
-            new THREE.MeshStandardMaterial({ color: 0xff6600, metalness: 0.7, roughness: 0.4 })
-        );
-        mast.position.y = 2.5;
-        reclaimer.add(mast);
-
-        const cab = new THREE.Mesh(
-            new THREE.BoxGeometry(1.5, 1.5, 1.5),
-            new THREE.MeshStandardMaterial({ color: 0x2244aa, metalness: 0.5, roughness: 0.4 })
-        );
-        cab.position.set(0.8, 5, 0);
-        reclaimer.add(cab);
-
-        const label = this._makeLabel(data.name + ': ' + Math.floor(data.stock) + 't',
-            data.lowStock ? '#ff9900' : '#00d4ff');
-        label.position.y = h + 2;
-        group.add(label);
-
-        const warningGlow = new THREE.Mesh(
-            new THREE.BoxGeometry(w + 3, h + 4, d + 3),
-            new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0, side: THREE.BackSide })
-        );
-        warningGlow.position.y = h / 2 + 1;
-        warningGlow.visible = false;
-        warningGlow.userData.type = 'warningGlow';
-        group.add(warningGlow);
-        this.effects.push(warningGlow);
-        group.userData.warningGlow = warningGlow;
-
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
-    },
-
-    _buildStack(x, z, data) {
-        const group = new THREE.Group();
-        group.position.set(x, 0, z);
-        group.userData = { type: 'stack', data };
-
-        const base = new THREE.Mesh(
-            new THREE.CylinderGeometry(3, 3.5, 2, 24),
-            new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.6, roughness: 0.5 })
-        );
-        base.position.y = 1;
-        base.castShadow = base.receiveShadow = true;
-        group.add(base);
-
-        const shaft = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.8, 2.8, 28, 24),
-            new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.5, roughness: 0.55 })
-        );
-        shaft.position.y = 16;
-        shaft.castShadow = shaft.receiveShadow = true;
-        group.add(shaft);
-
-        for (let i = 0; i < 7; i++) {
-            const ring = new THREE.Mesh(
-                new THREE.TorusGeometry(2.4 - i * 0.1, 0.15, 6, 32),
-                new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 })
-            );
-            ring.rotation.x = Math.PI / 2;
-            ring.position.y = 4 + i * 3.5;
-            group.add(ring);
-        }
-
-        const top = new THREE.Mesh(
-            new THREE.CylinderGeometry(2.2, 1.8, 1.5, 24),
-            new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.7, roughness: 0.4 })
-        );
-        top.position.y = 30.75;
-        group.add(top);
-
-        const warningBand = new THREE.Mesh(
-            new THREE.TorusGeometry(2.1, 0.18, 8, 32),
-            new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: 0xff0000, emissiveIntensity: 0 })
-        );
-        warningBand.rotation.x = Math.PI / 2;
-        warningBand.position.y = 30;
-        group.add(warningBand);
-        group.userData.warningBand = warningBand;
-
-        this._addSmokeEffect(group, 0, 32, 0);
-
-        const label = this._makeLabel(data.name);
-        label.position.y = 36;
-        group.add(label);
-
-        const warningGlow = new THREE.Mesh(
-            new THREE.CylinderGeometry(4, 4, 34, 24),
-            new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, side: THREE.BackSide })
-        );
-        warningGlow.position.y = 17;
-        warningGlow.visible = false;
-        warningGlow.userData.type = 'warningGlow';
-        group.add(warningGlow);
-        this.effects.push(warningGlow);
-        group.userData.warningGlow = warningGlow;
-
-        this.scene.add(group);
-        this.equipmentMap[data.id] = group;
-        return group;
-    },
-
-    _buildPersonnel(pdata) {
-        const group = new THREE.Group();
-        group.position.set(pdata.x, 0, pdata.z);
-        group.userData = { type: 'personnel', data: pdata };
-
-        const bodyMat = new THREE.MeshStandardMaterial({
-            color: pdata.inDanger ? 0xff0000 : 0x2266aa, metalness: 0.3, roughness: 0.6
-        });
-
-        const legs = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.25, 0.28, 1, 12),
-            new THREE.MeshStandardMaterial({ color: 0x222244, metalness: 0.3, roughness: 0.6 })
-        );
-        legs.position.y = 0.5;
-        group.add(legs);
-
-        const body = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.45, 0.35, 1.2, 14),
-            bodyMat
-        );
-        body.position.y = 1.6;
-        group.add(body);
-
-        const head = new THREE.Mesh(
-            new THREE.SphereGeometry(0.28, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xddbbaa, roughness: 0.7 })
-        );
-        head.position.y = 2.55;
-        group.add(head);
-
-        const helmet = new THREE.Mesh(
-            new THREE.SphereGeometry(0.32, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-            new THREE.MeshStandardMaterial({
-                color: pdata.inDanger ? 0xff0000 : 0xffaa00,
-                emissive: pdata.inDanger ? 0xff0000 : 0,
-                emissiveIntensity: pdata.inDanger ? 0.5 : 0,
-                metalness: 0.4, roughness: 0.4
-            })
-        );
-        helmet.position.y = 2.65;
-        group.add(helmet);
-        group.userData.helmet = helmet;
-        group.userData.bodyMat = bodyMat;
-
-        const label = this._makeLabel(pdata.name + ' | ' + pdata.role,
-            pdata.inDanger ? '#ff0000' : '#10b981', 42);
-        label.position.y = 3.6;
-        group.add(label);
-        group.userData.label = label;
-
-        const warningGlow = new THREE.Mesh(
-            new THREE.SphereGeometry(1.5, 16, 16),
-            new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, side: THREE.BackSide })
-        );
-        warningGlow.position.y = 1.8;
-        warningGlow.visible = false;
-        warningGlow.userData.type = 'warningGlow';
-        group.add(warningGlow);
-        this.effects.push(warningGlow);
-        group.userData.warningGlow = warningGlow;
-
-        this.scene.add(group);
-        return group;
     },
 
     _buildDangerZone(dz) {
@@ -1054,60 +888,29 @@ const FactoryScene = {
         this.scene.add(group);
     },
 
-    _buildAllEquipment() {
-        if (!this.currentState) return;
-        const s = this.currentState;
-
-        const bfPos = [[-5, -20], [5, -18], [15, -22]];
-        s.blastFurnaces.forEach((bf, i) => {
-            this._buildBlastFurnace(bfPos[i][0], bfPos[i][1], bf);
-        });
-
-        const convPos = [[18, -6], [28, -4]];
-        s.converters.forEach((c, i) => {
-            this._buildConverter(convPos[i][0], convPos[i][1], c);
-        });
-
-        const castPos = [[-5, 8], [5, 12]];
-        s.casters.forEach((ct, i) => {
-            this._buildCaster(castPos[i][0], castPos[i][1], ct);
-        });
-
-        const rmPos = [[30, 12], [30, 28]];
-        s.rollingMills.forEach((rm, i) => {
-            this._buildRollingMill(rmPos[i][0], rmPos[i][1], rm);
-        });
-
-        s.rawYard.forEach(pile => {
-            this._buildRawPile(pile.position.x, pile.position.z, pile);
-        });
-
-        s.stacks.forEach(st => {
-            this._buildStack(st.position.x, st.position.z, st);
-        });
-
-        this.personnelGroup = {};
-        s.personnel.forEach(p => {
-            this.personnelGroup[p.id] = this._buildPersonnel(p);
-        });
-
-        s.dangerZones.forEach(dz => this._buildDangerZone(dz));
-
-        this._buildWarehouse();
-        this._buildControlRoom();
-    },
-
     setState(state) {
         if (!this.currentState) {
             this.currentState = state;
-            this._buildAllEquipment();
+            if (this._modelsLoaded && !this._equipmentBuilt) {
+                this._buildAllFromProtos();
+                this._updateEquipment(state);
+            }
         } else {
             this.currentState = state;
-            this._updateEquipment(state);
+            if (this._equipmentBuilt) {
+                this._updateEquipment(state);
+            }
         }
     },
 
     _updateEquipment(state) {
+        if (!this._modelsLoaded) return;
+
+        if (state.dangerZones && state.dangerZones.length > 0 && !this._dangerZonesBuilt) {
+            state.dangerZones.forEach(dz => this._buildDangerZone(dz));
+            this._dangerZonesBuilt = true;
+        }
+
         state.blastFurnaces.forEach(bf => {
             const g = this.equipmentMap[bf.id];
             if (!g) return;
@@ -1125,13 +928,13 @@ const FactoryScene = {
                     }
                 });
             }
-            if (g.userData.shell) {
-                const overHeat = c.temp > 1700;
-                g.userData.shell.traverse(o => {
-                    if (o.isMesh && o.material && o.material.color &&
-                        o.material.color.getHex() !== 0xffff88 && o.material.color.getHex() !== c.flameColor) {
+            const overHeat = c.temp > 1700;
+            g.traverse(o => {
+                if (o.isMesh && o.material && o.material.color) {
+                    const hex = o.material.color.getHex();
+                    if (hex !== 0xffff88 && hex !== c.flameColor) {
                         if (overHeat) {
-                            if (!o.userData.origColor) o.userData.origColor = o.material.color.getHex();
+                            if (!o.userData.origColor) o.userData.origColor = hex;
                             o.material.color.lerp(new THREE.Color(0xff0000), 0.6);
                             if (o.material.emissive) {
                                 o.material.emissive.setHex(0xff2200);
@@ -1140,13 +943,13 @@ const FactoryScene = {
                         } else if (o.userData.origColor) {
                             o.material.color.setHex(o.userData.origColor);
                             if (o.material.emissive) {
-                                o.material.emissive.setHex(0x000000);
-                                o.material.emissiveIntensity = 0;
+                                o.material.emissive.setHex(o.userData.origEmissive || 0);
+                                o.material.emissiveIntensity = o.userData.origEmissiveIntensity || 0;
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         });
 
         state.casters.forEach(ct => {
@@ -1169,7 +972,8 @@ const FactoryScene = {
             }
         });
 
-        state.rawYard.forEach(pile => {
+        const rawPiles = state.rawYard || [];
+        rawPiles.forEach(pile => {
             const g = this.equipmentMap[pile.id];
             if (!g || !g.userData.warningGlow) return;
             g.userData.warningGlow.visible = pile.lowStock;
@@ -1192,6 +996,7 @@ const FactoryScene = {
             }
         });
 
+        const time = this.clock.elapsedTime;
         state.personnel.forEach(p => {
             const g = this.personnelGroup[p.id];
             if (!g) return;
@@ -1201,16 +1006,34 @@ const FactoryScene = {
             if (g.userData.warningGlow) {
                 g.userData.warningGlow.visible = p.inDanger;
                 if (p.inDanger) {
-                    g.userData.warningGlow.material.opacity = 0.18 + Math.sin(Date.now() / 100) * 0.12;
+                    g.userData.warningGlow.material.opacity = 0.18 + Math.sin(time * 8) * 0.12;
                 }
             }
-            if (g.userData.helmet) {
-                g.userData.helmet.material.color.setHex(p.inDanger ? 0xff0000 : 0xffaa00);
-                g.userData.helmet.material.emissive.setHex(p.inDanger ? 0xff0000 : 0x000000);
-                g.userData.helmet.material.emissiveIntensity = p.inDanger ? 0.5 : 0;
+            if (g.userData.helmetMesh) {
+                const helmet = g.userData.helmetMesh;
+                if (p.inDanger) {
+                    helmet.material.color.setHex(0xff0000);
+                    if (helmet.material.emissive) {
+                        helmet.material.emissive.setHex(0xff0000);
+                        helmet.material.emissiveIntensity = 0.3 + Math.abs(Math.sin(time * 8)) * 0.7;
+                    }
+                } else {
+                    helmet.material.color.setHex(0xf59e0b);
+                    if (helmet.material.emissive) {
+                        helmet.material.emissive.setHex(0);
+                        helmet.material.emissiveIntensity = 0;
+                    }
+                }
             }
-            if (g.userData.bodyMat) {
-                g.userData.bodyMat.color.setHex(p.inDanger ? 0xff0000 : 0x2266aa);
+            if (g.userData.labelSprite) {
+                const sprite = g.userData.labelSprite;
+                if (p.inDanger) {
+                    sprite.material.color.setHex(0xff0000);
+                    sprite.material.opacity = 0.5 + Math.abs(Math.sin(time * 8)) * 0.5;
+                } else {
+                    sprite.material.color.setHex(0x10b981);
+                    sprite.material.opacity = 1;
+                }
             }
         });
     },

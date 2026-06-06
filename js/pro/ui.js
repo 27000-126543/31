@@ -356,7 +356,8 @@ const UIManager = {
     async _exportReport() {
         try {
             const shift = 'day';
-            const res = await fetch('/api/report/daily?shift=' + shift);
+            const user = encodeURIComponent(this.user || 'System');
+            const res = await fetch('/api/report/daily?shift=' + shift + '&user=' + user);
             const buf = await res.arrayBuffer();
             const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
