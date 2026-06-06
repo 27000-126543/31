@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D智慧钢铁厂生产调度与环保联动可视化平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <h1>🏭 智慧钢铁厂可视化平台</h1>
+            <p class="subtitle">3D Production Scheduling & Environmental Monitoring Platform</p>
+            <div class="face-scan-area">
+                <div class="face-placeholder">
+                    <div class="scan-line"></div>
+                    <span id="face-status">正在识别...</span>
+                </div>
+            </div>
+            <div class="role-select">
+                <label>选择登录角色：</label>
+                <select id="role-select">
+                    <option value="operator">操作员</option>
+                    <option value="director">车间主任</option>
+                    <option value="manager">厂长</option>
+                </select>
+            </div>
+            <button id="login-btn" class="login-btn">🔐 人脸识别登录</button>
+            <div id="login-error" class="login-error"></div>
+        </div>
+    </div>
+
+    <div id="app" class="app-container" style="display:none;">
+        <div id="three-container"></div>
+
+        <header class="top-header">
+            <div class="header-left">
+                <h1>🏭 3D智慧钢铁厂可视化平台</h1>
+                <span id="current-user" class="user-info"></span>
+            </div>
+            <div class="header-center">
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <span class="stat-label">总产量</span>
+                        <span class="stat-value" id="total-output">0</span>
+                        <span class="stat-unit">吨</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">合格率</span>
+                        <span class="stat-value" id="qualified-rate">0</span>
+                        <span class="stat-unit">%</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-label">报警数</span>
+                        <span class="stat-value" id="alarm-count">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">综合能耗</span>
+                        <span class="stat-value" id="energy-consumption">0</span>
+                        <span class="stat-unit">kgce/t</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <span id="current-time" class="time-display"></span>
+                <button id="export-btn" class="btn btn-primary">📊 导出日报</button>
+                <button id="logout-btn" class="btn btn-secondary">🚪 退出</button>
+            </div>
+        </header>
+
+        <aside class="left-panel">
+            <div class="panel-section">
+                <h3>📍 区域导航</h3>
+                <div class="nav-buttons">
+                    <button class="nav-btn" data-area="overview">🏠 总览</button>
+                    <button class="nav-btn" data-area="raw-material">📦 原料场</button>
+                    <button class="nav-btn" data-area="blast-furnace">🔥 高炉</button>
+                    <button class="nav-btn" data-area="converter">⚙️ 转炉</button>
+                    <button class="nav-btn" data-area="caster">🔄 连铸机</button>
+                    <button class="nav-btn" data-area="rolling">🏭 轧机</button>
+                    <button class="nav-btn" data-area="warehouse">📦 成品库</button>
+                    <button class="nav-btn" data-area="control">🖥️ 中央控制室</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>📋 实时报警</h3>
+                <div id="alarm-list" class="alarm-list"></div>
+            </div>
+
+            <div class="panel-section">
+                <h3>👷 人员定位</h3>
+                <div id="personnel-list" class="personnel-list"></div>
+            </div>
+        </aside>
+
+        <aside class="right-panel">
+            <div class="panel-section">
+                <h3 id="selected-title">📊 设备详情</h3>
+                <div id="equipment-detail" class="equipment-detail">
+                    <p class="placeholder">点击场景中的设备查看详细信息</p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>🌿 环保监测</h3>
+                <div id="environmental-stats" class="environmental-stats"></div>
+            </div>
+
+            <div class="panel-section">
+                <h3>📈 生产调度</h3>
+                <div id="scheduling-panel" class="scheduling-panel"></div>
+            </div>
+
+            <div class="panel-section">
+                <h3>🕐 维修计划时间轴</h3>
+                <div id="maintenance-timeline" class="maintenance-timeline"></div>
+            </div>
+        </aside>
+
+        <div id="chart-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="chart-title">趋势图</h3>
+                    <button class="close-btn" id="close-chart">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="alert-modal" class="modal">
+            <div class="modal-content alert-modal">
+                <div class="alert-icon">⚠️</div>
+                <h3 id="alert-title">报警</h3>
+                <p id="alert-message"></p>
+                <div class="alert-actions">
+                    <button id="alert-confirm" class="btn btn-primary">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="suggestion-modal" class="modal">
+            <div class="modal-content suggestion-modal">
+                <div class="modal-header">
+                    <h3 id="suggestion-title">💡 调整建议</h3>
+                    <button class="close-btn" id="close-suggestion">&times;</button>
+                </div>
+                <div id="suggestion-content" class="suggestion-content"></div>
+                <div class="suggestion-actions">
+                    <button id="suggestion-apply" class="btn btn-primary">执行建议</button>
+                    <button id="suggestion-dismiss" class="btn btn-secondary">稍后处理</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/models.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/monitors.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
