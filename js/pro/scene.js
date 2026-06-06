@@ -343,11 +343,10 @@ const FactoryScene = {
 
     _buildBlastFurnaces(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-18, 0, -12], [-6, 0, -12], [6, 0, -12]];
         this.currentState.blastFurnaces.forEach((bf, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = positions[i];
-            group.position.set(px, py, pz);
+            const pos = bf.position || { x: -18 + i * 12, z: -12 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -389,11 +388,10 @@ const FactoryScene = {
 
     _buildConverters(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[18, 0, -4], [18, 0, 8]];
         this.currentState.converters.forEach((c, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = positions[i];
-            group.position.set(px, py, pz);
+            const pos = c.position || { x: 18, z: -4 + i * 12 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -435,11 +433,10 @@ const FactoryScene = {
 
     _buildRollingMills(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-18, 0, 12], [-6, 0, 12]];
         this.currentState.rollingMills.forEach((rm, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = positions[i];
-            group.position.set(px, py, pz);
+            const pos = rm.position || { x: -18 + i * 12, z: 12 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -476,11 +473,10 @@ const FactoryScene = {
 
     _buildCasters(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[6, 0, 6], [6, 0, -3]];
         this.currentState.casters.forEach((ct, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = positions[i];
-            group.position.set(px, py, pz);
+            const pos = ct.position || { x: 6, z: 6 - i * 9 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -519,11 +515,10 @@ const FactoryScene = {
 
     _buildStacks(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-8, 0, -22], [8, 0, -22]];
         this.currentState.stacks.forEach((st, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = positions[i];
-            group.position.set(px, py, pz);
+            const pos = st.position || { x: -8 + i * 16, z: -22 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -565,12 +560,11 @@ const FactoryScene = {
 
     _buildReclaimers(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-32, 0, -6], [-32, 0, 3], [-32, 0, 10]];
         const rawData = this.currentState.rawYard || [];
-        positions.forEach((pos, i) => {
+        rawData.forEach((pile, i) => {
             const group = proto.clone(true);
-            const [px, py, pz] = pos;
-            group.position.set(px, py, pz);
+            const pos = pile.position || { x: -32, z: -6 + i * 9 };
+            group.position.set(pos.x, 0, pos.z);
             this._centerModelY(group);
             group.traverse(o => {
                 if (o.isMesh) {
@@ -821,7 +815,8 @@ const FactoryScene = {
 
     _buildWarehouse() {
         const group = new THREE.Group();
-        group.position.set(32, 0, -10);
+        const layout = (this.currentState && this.currentState.layout && this.currentState.layout.warehouse) || { x: 32, z: -10 };
+        group.position.set(layout.x, 0, layout.z);
 
         const frame = new THREE.Mesh(
             new THREE.BoxGeometry(24, 10, 16),
@@ -855,7 +850,8 @@ const FactoryScene = {
 
     _buildControlRoom() {
         const group = new THREE.Group();
-        group.position.set(32, 0, 18);
+        const layout = (this.currentState && this.currentState.layout && this.currentState.layout.controlRoom) || { x: 32, z: 18 };
+        group.position.set(layout.x, 0, layout.z);
 
         const base = new THREE.Mesh(
             new THREE.BoxGeometry(20, 8, 14),

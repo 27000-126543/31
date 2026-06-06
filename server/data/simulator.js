@@ -15,6 +15,7 @@ class IndustrialDataSimulator {
                     id: 'bf_001', name: '1号高炉',
                     windPressure: 380, hotMetalTemp: 1510, silicon: 0.55,
                     burdenLevel: 72, status: 'running', history: [],
+                    position: { x: -18, z: -12 },
                     _m_iron: 1500, _c_iron: 0.82, _k_loss: 0.45, _A_wall: 280,
                     _m_air: 4.2, _cp_air: 1.005, _T_wind: 1150, _Q_reaction: 2.8e6,
                     _T_ambient: 25
@@ -23,6 +24,7 @@ class IndustrialDataSimulator {
                     id: 'bf_002', name: '2号高炉',
                     windPressure: 365, hotMetalTemp: 1495, silicon: 0.62,
                     burdenLevel: 68, status: 'running', history: [],
+                    position: { x: -6, z: -12 },
                     _m_iron: 1450, _c_iron: 0.82, _k_loss: 0.48, _A_wall: 270,
                     _m_air: 4.0, _cp_air: 1.005, _T_wind: 1120, _Q_reaction: 2.7e6,
                     _T_ambient: 25
@@ -31,6 +33,7 @@ class IndustrialDataSimulator {
                     id: 'bf_003', name: '3号高炉',
                     windPressure: 392, hotMetalTemp: 1525, silicon: 0.48,
                     burdenLevel: 81, status: 'running', history: [],
+                    position: { x: 6, z: -12 },
                     _m_iron: 1550, _c_iron: 0.82, _k_loss: 0.42, _A_wall: 290,
                     _m_air: 4.4, _cp_air: 1.005, _T_wind: 1180, _Q_reaction: 2.9e6,
                     _T_ambient: 25
@@ -42,6 +45,7 @@ class IndustrialDataSimulator {
                     temp: 1650, flameColor: 0xff6600, carbon: 0.06,
                     manganese: 0.45, phosphorus: 0.018, sulfur: 0.012,
                     status: 'blowing', argonActive: false, bubbleCount: 0,
+                    position: { x: 18, z: -4 },
                     _k_O2: 0.0012, _F_O2: 48000, _F_Ar: 0, _k_Ar: 0.012,
                     _m_steel: 260, _c_steel: 0.69
                 },
@@ -50,6 +54,7 @@ class IndustrialDataSimulator {
                     temp: 1680, flameColor: 0xff3300, carbon: 0.04,
                     manganese: 0.38, phosphorus: 0.015, sulfur: 0.009,
                     status: 'blowing', argonActive: false, bubbleCount: 0,
+                    position: { x: 18, z: 8 },
                     _k_O2: 0.0013, _F_O2: 52000, _F_Ar: 0, _k_Ar: 0.012,
                     _m_steel: 280, _c_steel: 0.69
                 }
@@ -58,12 +63,14 @@ class IndustrialDataSimulator {
                 {
                     id: 'cast_001', name: '1号连铸机',
                     castingSpeed: 1.8, moldLevel: 45.2, levelVariation: 1.2,
-                    status: 'casting', _sigma: 0.27, _levelBase: 45.0
+                    status: 'casting', _sigma: 0.27, _levelBase: 45.0,
+                    position: { x: 6, z: 6 }
                 },
                 {
                     id: 'cast_002', name: '2号连铸机',
                     castingSpeed: 1.6, moldLevel: 48.7, levelVariation: 2.1,
-                    status: 'casting', _sigma: 0.24, _levelBase: 48.0
+                    status: 'casting', _sigma: 0.24, _levelBase: 48.0,
+                    position: { x: 6, z: -3 }
                 }
             ],
             rollingMills: [
@@ -72,6 +79,7 @@ class IndustrialDataSimulator {
                     rollingForce: 1850, thicknessDeviation: 0.04,
                     targetThickness: 2.0, status: 'rolling',
                     lineType: 'CSP', thicknessRange: [0.8, 6.0],
+                    position: { x: -18, z: 12 },
                     _Y: 180, _L: 1.2, _w: 1.5, _R: 0.35, _dh_prev: 0.04,
                     _h_in: 2.1, _loadFactor: 0.78
                 },
@@ -80,6 +88,7 @@ class IndustrialDataSimulator {
                     rollingForce: 4200, thicknessDeviation: 0.08,
                     targetThickness: 25.0, status: 'rolling',
                     lineType: 'heavy', thicknessRange: [6.0, 80.0],
+                    position: { x: -6, z: 12 },
                     _Y: 220, _L: 2.4, _w: 2.2, _R: 0.65, _dh_prev: 0.08,
                     _h_in: 26.5, _loadFactor: 0.82
                 }
@@ -207,6 +216,10 @@ class IndustrialDataSimulator {
                 passRate: 98.6,
                 totalEnergy: 586,
                 envEvents: 3
+            },
+            layout: {
+                warehouse: { x: 32, z: -10 },
+                controlRoom: { x: 32, z: 18 }
             }
         };
 
