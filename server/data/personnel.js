@@ -7,45 +7,45 @@ function gaussRandom(mean, std) {
 }
 
 const FACTORY_PATH_POINTS = {
-    blastFurnaceArea: { x: 5, z: -20, name: '高炉旁' },
-    converterControl: { x: 22, z: -12, name: '转炉操作室' },
-    centralControl: { x: 0, z: 0, name: '中控室' },
-    restRoom: { x: -30, z: 10, name: '休息室' },
-    casterPlatform: { x: 15, z: 15, name: '连铸平台' },
-    qualityLab: { x: 40, z: 5, name: '质检室' },
-    rawYard: { x: -40, z: -15, name: '原料堆场' },
-    rollingMill: { x: 35, z: 20, name: '轧钢车间' }
+    blastFurnaceArea: { x: -6, z: -10, name: '高炉旁' },
+    converterControl: { x: 18, z: 2, name: '转炉操作室' },
+    centralControl: { x: 32, z: 18, name: '中控室' },
+    restRoom: { x: -20, z: 15, name: '休息室' },
+    casterPlatform: { x: 6, z: 4, name: '连铸平台' },
+    qualityLab: { x: 28, z: 10, name: '质检室' },
+    rawYard: { x: -28, z: 3, name: '原料堆场' },
+    rollingMill: { x: -12, z: 12, name: '轧钢车间' }
 };
 
 const WORKER_CONFIGS = [
     {
         id: 'p001', name: '张建国', role: '高炉工',
-        homeX: 5, homeZ: -8, speed: 0.8,
+        homeX: -6, homeZ: -5, speed: 0.8,
         paths: ['blastFurnaceArea', 'centralControl', 'restRoom', 'rawYard', 'casterPlatform']
     },
     {
         id: 'p002', name: '李明华', role: '炼钢工',
-        homeX: 25, homeZ: -12, speed: 0.9,
+        homeX: 18, homeZ: -2, speed: 0.9,
         paths: ['converterControl', 'blastFurnaceArea', 'qualityLab', 'centralControl', 'restRoom']
     },
     {
         id: 'p003', name: '王志强', role: '质检工',
-        homeX: 45, homeZ: 10, speed: 0.7,
+        homeX: 28, homeZ: 10, speed: 0.7,
         paths: ['qualityLab', 'casterPlatform', 'rollingMill', 'converterControl', 'centralControl']
     },
     {
         id: 'p004', name: '赵伟', role: '连铸工',
-        homeX: 0, homeZ: 15, speed: 0.85,
+        homeX: 6, homeZ: 6, speed: 0.85,
         paths: ['casterPlatform', 'rollingMill', 'centralControl', 'restRoom', 'qualityLab']
     },
     {
         id: 'p005', name: '刘芳', role: '中控操作员',
-        homeX: 2, homeZ: 2, speed: 0.6,
+        homeX: 28, homeZ: 14, speed: 0.6,
         paths: ['centralControl', 'converterControl', 'blastFurnaceArea', 'restRoom', 'casterPlatform', 'qualityLab']
     },
     {
         id: 'p006', name: '陈刚', role: '原料工',
-        homeX: -35, homeZ: -20, speed: 1.0,
+        homeX: -28, homeZ: 0, speed: 1.0,
         paths: ['rawYard', 'blastFurnaceArea', 'restRoom', 'centralControl']
     }
 ];

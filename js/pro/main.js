@@ -44,10 +44,13 @@ const App = {
         if (userInfo) {
             const scoreSpan = document.createElement('span');
             scoreSpan.id = 'face-score';
-            scoreSpan.style.color = '#00d4ff';
+            scoreSpan.style.color = info.isMock ? '#f59e0b' : '#00d4ff';
             scoreSpan.style.marginLeft = '10px';
             scoreSpan.style.fontSize = '12px';
-            scoreSpan.textContent = '匹配度 ' + ((info.similarity || 0) * 100).toFixed(1) + '%';
+            const simPct = ((info.similarity || 0) * 100).toFixed(1);
+            const confPct = ((info.confidence || 0) * 100).toFixed(1);
+            const tag = info.isMock ? '（模拟）' : '';
+            scoreSpan.textContent = '匹配度 ' + simPct + '%  置信度 ' + confPct + '%' + tag;
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 userInfo.insertBefore(scoreSpan, logoutBtn);

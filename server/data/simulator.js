@@ -88,19 +88,19 @@ class IndustrialDataSimulator {
                 {
                     id: 'pile_001', name: '焦炭A堆',
                     material: 'Coke', stock: 8500, daysLeft: 12, lowStock: false,
-                    position: { x: -40, z: -30 }, color: 0x3a3a3a,
+                    position: { x: -32, z: -6 }, color: 0x3a3a3a,
                     _consumption: 680
                 },
                 {
                     id: 'pile_002', name: '铁矿石B堆',
                     material: 'Iron Ore', stock: 22000, daysLeft: 18, lowStock: false,
-                    position: { x: -40, z: -15 }, color: 0x8b4513,
+                    position: { x: -32, z: 3 }, color: 0x8b4513,
                     _consumption: 1250
                 },
                 {
                     id: 'pile_003', name: '石灰石C堆',
                     material: 'Limestone', stock: 3200, daysLeft: 5, lowStock: true,
-                    position: { x: -40, z: 0 }, color: 0xcfcfcf,
+                    position: { x: -32, z: 10 }, color: 0xcfcfcf,
                     _consumption: 520
                 }
             ],
@@ -108,7 +108,7 @@ class IndustrialDataSimulator {
                 {
                     id: 'stack_001', name: '高炉区烟囱',
                     so2: 85, nox: 140, so2Limit: 100, noxLimit: 150,
-                    overLimit: false, position: { x: 10, z: 35 },
+                    overLimit: false, position: { x: -8, z: -22 },
                     _Q_flue: 125000, _eta_desulf: 0.92, _eta_denit: 0.88,
                     _C_so2_in: 1050, _C_nox_in: 1150, _reducing: false,
                     _reductionRate: 0
@@ -116,7 +116,7 @@ class IndustrialDataSimulator {
                 {
                     id: 'stack_002', name: '转炉区烟囱',
                     so2: 130, nox: 155, so2Limit: 100, noxLimit: 150,
-                    overLimit: true, position: { x: 30, z: 35 },
+                    overLimit: true, position: { x: 8, z: -22 },
                     _Q_flue: 148000, _eta_desulf: 0.88, _eta_denit: 0.86,
                     _C_so2_in: 1080, _C_nox_in: 1100, _reducing: true,
                     _reductionRate: 2.5
@@ -125,33 +125,33 @@ class IndustrialDataSimulator {
             personnel: [
                 {
                     id: 'p001', name: '张建国', role: '高炉工',
-                    x: 5, z: -8, vx: 0.1, vz: 0.05, inDanger: false, lastUpdate: Date.now(),
-                    _target: { x: 5, z: -15 }, _targetIdx: 0,
-                    _waypoints: [{ x: 5, z: -8 }, { x: 5, z: -18 }, { x: 12, z: -15 }, { x: 0, z: -10 }]
+                    x: -6, z: -5, vx: 0.1, vz: 0.05, inDanger: false, lastUpdate: Date.now(),
+                    _target: { x: -6, z: -12 }, _targetIdx: 0,
+                    _waypoints: [{ x: -6, z: -5 }, { x: -6, z: -15 }, { x: 0, z: -12 }, { x: -12, z: -8 }]
                 },
                 {
                     id: 'p002', name: '李明华', role: '炼钢工',
-                    x: 25, z: -12, vx: -0.05, vz: 0.08, inDanger: false, lastUpdate: Date.now(),
-                    _target: { x: 22, z: -10 }, _targetIdx: 0,
-                    _waypoints: [{ x: 25, z: -12 }, { x: 20, z: -8 }, { x: 28, z: -15 }, { x: 22, z: -12 }]
+                    x: 18, z: -2, vx: -0.05, vz: 0.08, inDanger: false, lastUpdate: Date.now(),
+                    _target: { x: 18, z: 2 }, _targetIdx: 0,
+                    _waypoints: [{ x: 18, z: -2 }, { x: 15, z: 4 }, { x: 22, z: -5 }, { x: 18, z: 2 }]
                 },
                 {
                     id: 'p003', name: '王志强', role: '质检工',
-                    x: 45, z: 10, vx: 0.03, vz: -0.06, inDanger: false, lastUpdate: Date.now(),
-                    _target: { x: 40, z: 5 }, _targetIdx: 0,
-                    _waypoints: [{ x: 45, z: 10 }, { x: 38, z: 15 }, { x: 50, z: 0 }, { x: 42, z: 8 }]
+                    x: 28, z: 12, vx: 0.03, vz: -0.06, inDanger: false, lastUpdate: Date.now(),
+                    _target: { x: 25, z: 5 }, _targetIdx: 0,
+                    _waypoints: [{ x: 28, z: 12 }, { x: 20, z: 15 }, { x: 30, z: 0 }, { x: 25, z: 8 }]
                 },
                 {
                     id: 'p004', name: '赵伟', role: '连铸工',
-                    x: 0, z: 15, vx: 0.07, vz: -0.04, inDanger: false, lastUpdate: Date.now(),
-                    _target: { x: 5, z: 12 }, _targetIdx: 0,
-                    _waypoints: [{ x: 0, z: 15 }, { x: 8, z: 10 }, { x: -5, z: 20 }, { x: 3, z: 14 }]
+                    x: 3, z: 10, vx: 0.07, vz: -0.04, inDanger: false, lastUpdate: Date.now(),
+                    _target: { x: 6, z: 4 }, _targetIdx: 0,
+                    _waypoints: [{ x: 3, z: 10 }, { x: 8, z: 6 }, { x: -2, z: 15 }, { x: 6, z: 2 }]
                 }
             ],
             dangerZones: [
-                { id: 'dz_conv', name: '转炉平台', x: 22, z: -15, radius: 8 },
-                { id: 'dz_bf', name: '高炉风口区', x: 5, z: -20, radius: 6 },
-                { id: 'dz_stack', name: '烟囱排放区', x: 20, z: 32, radius: 10 }
+                { id: 'dz_conv', name: '转炉平台', x: 18, z: -4, radius: 6 },
+                { id: 'dz_bf', name: '高炉风口区', x: -6, z: -12, radius: 5 },
+                { id: 'dz_stack', name: '烟囱排放区', x: 0, z: -22, radius: 8 }
             ],
             orders: [
                 {
@@ -281,27 +281,28 @@ class IndustrialDataSimulator {
 
     _updateBlastFurnace(bf) {
         const dt = this._dt;
-        bf._T_wind = this._clamp(bf._T_wind + this._gauss() * 8, 1050, 1250);
-        bf._m_air = this._clamp(bf._m_air + this._gauss() * 0.08, 3.5, 5.0);
+        bf._T_wind = this._clamp(bf._T_wind + this._gauss() * 3, 1050, 1250);
+        bf._m_air = this._clamp(bf._m_air + this._gauss() * 0.03, 3.5, 5.0);
 
-        const Q_wind = bf._m_air * bf._cp_air * bf._T_wind * 600;
+        const Q_wind = bf._m_air * bf._cp_air * bf._T_wind * 60;
         const deltaT = bf.hotMetalTemp - bf._T_ambient;
         const Q_loss = bf._k_loss * bf._A_wall * deltaT;
-        const Q_reaction = bf._Q_reaction * (1 + 0.02 * this._gauss());
+        const Q_reaction = bf._Q_reaction * (1 + 0.006 * this._gauss());
         const dTdt = (Q_wind - Q_loss - Q_reaction) / (bf._m_iron * bf._c_iron * 1000);
 
-        bf.hotMetalTemp = this._clamp(bf.hotMetalTemp + dTdt * dt, 1450, 1550);
+        const tempDamping = 0.06;
+        bf.hotMetalTemp = this._clamp(bf.hotMetalTemp + dTdt * dt * tempDamping + this._gauss() * 0.4, 1450, 1550);
 
         const T_norm = (bf.hotMetalTemp - 1450) / (1550 - 1450);
-        bf.windPressure = this._clamp(350 + T_norm * 70 + this._gauss() * 4, 350, 420);
+        bf.windPressure = this._clamp(350 + T_norm * 70 + this._gauss() * 1.8, 350, 420);
 
         const Si_equilibrium = 0.9 - (bf.hotMetalTemp - 1450) * 0.004;
-        const dSi = (Si_equilibrium - bf.silicon) * 0.015 * dt;
-        bf.silicon = this._clamp(bf.silicon + dSi + this._gauss() * 0.008, 0.3, 0.9);
+        const dSi = (Si_equilibrium - bf.silicon) * 0.004 * dt;
+        bf.silicon = this._clamp(bf.silicon + dSi + this._gauss() * 0.003, 0.3, 0.9);
 
-        bf.burdenLevel = this._clamp(bf.burdenLevel - 0.08 * dt + this._gauss() * 0.15, 50, 95);
+        bf.burdenLevel = this._clamp(bf.burdenLevel - 0.02 * dt + this._gauss() * 0.08, 50, 95);
         if (bf.burdenLevel < 55) {
-            bf.burdenLevel = this._clamp(bf.burdenLevel + 2.0, 50, 95);
+            bf.burdenLevel = this._clamp(bf.burdenLevel + 0.5, 50, 95);
         }
 
         if (bf.history.length > 0) {
@@ -437,22 +438,33 @@ class IndustrialDataSimulator {
     _updateStack(st) {
         const dt = this._dt;
 
-        st._Q_flue = this._clamp(st._Q_flue + this._gauss() * 2500, 100000, 180000);
+        st._Q_flue = this._clamp(st._Q_flue + this._gauss() * 800, 100000, 180000);
 
         if (st.overLimit || st._reducing) {
-            st._reductionRate = this._clamp(st._reductionRate + 0.02 * dt, 0, 5);
-            st._eta_desulf = this._clamp(st._eta_desulf + 0.0005 * st._reductionRate * dt, 0.82, 0.97);
-            st._eta_denit = this._clamp(st._eta_denit + 0.0004 * st._reductionRate * dt, 0.80, 0.95);
+            st._reductionRate = this._clamp(st._reductionRate + 0.006 * dt, 0, 5);
+            st._eta_desulf = this._clamp(st._eta_desulf + 0.00008 * st._reductionRate * dt, 0.82, 0.97);
+            st._eta_denit = this._clamp(st._eta_denit + 0.00006 * st._reductionRate * dt, 0.80, 0.95);
         } else {
-            st._reductionRate = this._clamp(st._reductionRate - 0.03 * dt, 0, 5);
+            st._reductionRate = this._clamp(st._reductionRate - 0.008 * dt, 0, 5);
+            if (st._reductionRate < 0.01) {
+                st._eta_desulf = this._clamp(st._eta_desulf + this._gauss() * 0.0001, 0.88, 0.94);
+                st._eta_denit = this._clamp(st._eta_denit + this._gauss() * 0.0001, 0.84, 0.91);
+            }
         }
 
         const Q_ref = 140000;
         const base_so2 = 0.9 * st._C_so2_in * (1 - st._eta_desulf) * Q_ref / st._Q_flue;
         const base_nox = 0.85 * st._C_nox_in * (1 - st._eta_denit) * Q_ref / st._Q_flue;
 
-        st.so2 = this._clamp(base_so2 + this._gauss() * 5, 40, 180);
-        st.nox = this._clamp(base_nox + this._gauss() * 7, 60, 200);
+        if (st._so2_prev === undefined) st._so2_prev = base_so2;
+        if (st._nox_prev === undefined) st._nox_prev = base_nox;
+        const ar_so2 = 0.92 * st._so2_prev + 0.08 * base_so2 + this._gauss() * 0.8;
+        const ar_nox = 0.92 * st._nox_prev + 0.08 * base_nox + this._gauss() * 1.0;
+        st._so2_prev = ar_so2;
+        st._nox_prev = ar_nox;
+
+        st.so2 = this._clamp(ar_so2, 40, 180);
+        st.nox = this._clamp(ar_nox, 60, 200);
 
         const over = st.so2 > st.so2Limit || st.nox > st.noxLimit;
         if (over && !st.overLimit) {
@@ -495,8 +507,8 @@ class IndustrialDataSimulator {
             p.vz = (p.vz / speed) * 0.8;
         }
 
-        p.x = this._clamp(p.x + p.vx * dt, -50, 60);
-        p.z = this._clamp(p.z + p.vz * dt, -30, 50);
+        p.x = this._clamp(p.x + p.vx * dt, -40, 40);
+        p.z = this._clamp(p.z + p.vz * dt, -30, 30);
         p.lastUpdate = Date.now();
 
         p.inDanger = false;

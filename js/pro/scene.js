@@ -25,10 +25,10 @@ const FactoryScene = {
         const h = this.container.clientHeight;
 
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog(0x0a0e17, 80, 250);
+        this.scene.fog = new THREE.Fog(0x0a0e17, 60, 180);
 
         this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 500);
-        this.camera.position.set(60, 55, 80);
+        this.camera.position.set(45, 38, 55);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         this.renderer.setSize(w, h);
@@ -47,10 +47,10 @@ const FactoryScene = {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.08;
-        this.controls.minDistance = 15;
-        this.controls.maxDistance = 200;
+        this.controls.minDistance = 10;
+        this.controls.maxDistance = 150;
         this.controls.maxPolarAngle = Math.PI * 0.48;
-        this.controls.target.set(10, 0, 0);
+        this.controls.target.set(5, 3, 0);
 
         this._setupInteraction();
 
@@ -144,7 +144,7 @@ const FactoryScene = {
     },
 
     _buildGrid() {
-        const grid = new THREE.GridHelper(200, 80, 0x00d4ff, 0x00d4ff);
+        const grid = new THREE.GridHelper(120, 60, 0x00d4ff, 0x00d4ff);
         grid.material.opacity = 0.06;
         grid.material.transparent = true;
         grid.position.y = 0.02;
@@ -343,7 +343,7 @@ const FactoryScene = {
 
     _buildBlastFurnaces(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-25, 0, -15], [0, 0, -15], [25, 0, -15]];
+        const positions = [[-18, 0, -12], [-6, 0, -12], [6, 0, -12]];
         this.currentState.blastFurnaces.forEach((bf, i) => {
             const group = proto.clone(true);
             const [px, py, pz] = positions[i];
@@ -389,7 +389,7 @@ const FactoryScene = {
 
     _buildConverters(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[30, 0, -5], [30, 0, 15]];
+        const positions = [[18, 0, -4], [18, 0, 8]];
         this.currentState.converters.forEach((c, i) => {
             const group = proto.clone(true);
             const [px, py, pz] = positions[i];
@@ -435,7 +435,7 @@ const FactoryScene = {
 
     _buildRollingMills(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-25, 0, 20], [0, 0, 20]];
+        const positions = [[-18, 0, 12], [-6, 0, 12]];
         this.currentState.rollingMills.forEach((rm, i) => {
             const group = proto.clone(true);
             const [px, py, pz] = positions[i];
@@ -476,7 +476,7 @@ const FactoryScene = {
 
     _buildCasters(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[10, 0, 5], [10, 0, -8]];
+        const positions = [[6, 0, 6], [6, 0, -3]];
         this.currentState.casters.forEach((ct, i) => {
             const group = proto.clone(true);
             const [px, py, pz] = positions[i];
@@ -519,7 +519,7 @@ const FactoryScene = {
 
     _buildStacks(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-10, 0, -30], [10, 0, -30]];
+        const positions = [[-8, 0, -22], [8, 0, -22]];
         this.currentState.stacks.forEach((st, i) => {
             const group = proto.clone(true);
             const [px, py, pz] = positions[i];
@@ -565,7 +565,7 @@ const FactoryScene = {
 
     _buildReclaimers(proto) {
         if (!this.currentState || !proto) return;
-        const positions = [[-35, 0, 0], [-35, 0, 12], [-35, 0, -12]];
+        const positions = [[-32, 0, -6], [-32, 0, 3], [-32, 0, 10]];
         const rawData = this.currentState.rawYard || [];
         positions.forEach((pos, i) => {
             const group = proto.clone(true);
@@ -821,7 +821,7 @@ const FactoryScene = {
 
     _buildWarehouse() {
         const group = new THREE.Group();
-        group.position.set(50, 0, -15);
+        group.position.set(32, 0, -10);
 
         const frame = new THREE.Mesh(
             new THREE.BoxGeometry(24, 10, 16),
@@ -855,7 +855,7 @@ const FactoryScene = {
 
     _buildControlRoom() {
         const group = new THREE.Group();
-        group.position.set(50, 0, 25);
+        group.position.set(32, 0, 18);
 
         const base = new THREE.Mesh(
             new THREE.BoxGeometry(20, 8, 14),
@@ -1058,14 +1058,14 @@ const FactoryScene = {
 
     focusArea(area) {
         const targets = {
-            overview: { pos: [60, 55, 80], tgt: [10, 0, 0] },
-            rawYard: { pos: [-45, 30, -15], tgt: [-40, 5, -15] },
-            blastFurnace: { pos: [0, 30, -45], tgt: [5, 10, -15] },
-            converter: { pos: [25, 25, -30], tgt: [22, 8, -5] },
-            caster: { pos: [-5, 25, -20], tgt: [0, 5, 10] },
-            rollingMill: { pos: [55, 25, 20], tgt: [30, 6, 20] },
-            warehouse: { pos: [70, 25, -15], tgt: [50, 5, -15] },
-            controlRoom: { pos: [70, 25, 25], tgt: [50, 5, 25] }
+            overview: { pos: [45, 38, 55], tgt: [5, 3, 0] },
+            rawYard: { pos: [-35, 25, 5], tgt: [-28, 3, 0] },
+            blastFurnace: { pos: [-2, 25, -30], tgt: [-6, 5, -12] },
+            converter: { pos: [30, 22, -15], tgt: [18, 5, 2] },
+            caster: { pos: [-2, 22, -12], tgt: [6, 4, 2] },
+            rollingMill: { pos: [-5, 25, 28], tgt: [-12, 4, 12] },
+            warehouse: { pos: [40, 22, -10], tgt: [32, 4, -10] },
+            controlRoom: { pos: [40, 22, 20], tgt: [32, 4, 18] }
         };
         const cfg = targets[area] || targets.overview;
         const startPos = this.camera.position.clone();
